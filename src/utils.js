@@ -33,28 +33,22 @@ async function fsSymlink(target, path, type) {
  * @return {stream.Transform}
  */
 function groupTransform(handlePipeGroup) {
+  // NOTE:
+  // 當 Writable 完成時通知 Transform 可以維持有序的一個接一個的處理流程。
+  // 為確保上述邏輯，所以檢查 currCallback 是否有非預期外的調用。
+  let isNextStream = true;
+
   let readable = new Readable({
-    read(size) {},
+    read(/* size */) {},
     objectMode: true,
   });
-  let currChunk = null;
   let currCallback = null;
-  handlePipeGroup(readable)
-    .pipe(new Writable({
-      write(chunk, encoding, callback) {
-        let theCurrCallback = currCallback;
-        currChunk = null;
-        currCallback = null;
-        theCurrCallback(null, chunk);
-        callback(null);
-      },
-      objectMode: true,
-    }))
-  ;
-
-  return new Transform({
+  let transform = new Transform({
     transform(chunk, encoding, callback) {
-      currChunk = chunk;
+      if (!isNextStream) {
+        throw Error('Streaming processing overload.');
+      }
+      isNextStream = false;
       currCallback = callback;
       readable.push(chunk, encoding);
     },
@@ -64,6 +58,19 @@ function groupTransform(handlePipeGroup) {
     },
     objectMode: true,
   });
+  handlePipeGroup(readable)
+    .pipe(new Writable({
+      write(chunk, encoding, callback) {
+        transform.push(chunk);
+        callback(null);
+        currCallback(null);
+        isNextStream = true;
+      },
+      objectMode: true,
+    }))
+  ;
+
+  return transform;
 }
 
 

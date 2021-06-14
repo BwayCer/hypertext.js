@@ -1,123 +1,20 @@
-'use strict';
+
+import path from 'path';
+
+import gulp from 'gulp';
+// const multimatch = require('multimatch');
+
+import {
+  fsMkdir, fsRm,
+  groupTransform, gulpSymlink,
+} from './utils.js';
+
 
 /**
  * gulpTool
  *
  * @module gulpTool
  */
-
-
-const fs = require('fs');
-const fsPromises = fs.promises;
-const path = require('path');
-const {Readable, Writable, Transform} = require('stream');
-
-const gulp = require('gulp');
-// const multimatch = require('multimatch');
-
-
-async function _fsMkdir(path) {
-  await fsPromises.mkdir(path, {recursive: true});
-}
-
-async function _fsRm(path, option) {
-  try {
-    await fsPromises.access(path, fs.constants.F_OK);
-    await fsPromises.rm(path, Object.assign({
-      recursive: false,
-      force: true,
-    }, option));
-  } catch {
-    // 目錄不存在
-  }
-}
-
-async function _fsSymlink(target, path, type) {
-  try {
-    await fsPromises.access(path, fs.constants.F_OK);
-    await _fsRm(path);
-  } catch {}
-  await fsPromises.symlink(target, path, type);
-}
-
-
-/**
- * 處裡群組包轉換器：
- * 可以在 `gulp.pipe()` 中丟入一組處裡包，因此提高模組化的便利性。
- *
- * @memberof module:gulpTool.
- * @func groupTransform
- * @param {Function} handlePipeGroup
- * @return {stream.Transform}
- */
-function groupTransform(handlePipeGroup) {
-  let readable = new Readable({
-    read(size) {},
-    objectMode: true,
-  });
-  let currChunk = null;
-  let currCallback = null;
-  handlePipeGroup(readable)
-    .pipe(new Writable({
-      write(chunk, encoding, callback) {
-        let theCurrCallback = currCallback;
-        currChunk = null;
-        currCallback = null;
-        theCurrCallback(null, chunk);
-        callback(null);
-      },
-      objectMode: true,
-    }))
-  ;
-
-  return new Transform({
-    transform(chunk, encoding, callback) {
-      currChunk = chunk;
-      currCallback = callback;
-      readable.push(chunk, encoding);
-    },
-    flush(callback) {
-      readable.push(null);
-      callback(null);
-    },
-    objectMode: true,
-  });
-}
-
-
-/**
- * 產生鏈結文件管道。
- *
- * @memberof module:gulpTool.
- * @func gulpSymlink
- * @param {String} directory
- * @return {stream.Writable}
- */
-// NOTE:
-// 1. gulp.symlink 會遇到 Error: premature close 問題
-// 2. 此方法不會為資料夾建立鏈結文件。
-function gulpSymlink(directory) {
-  return new Writable({
-    async write(chunk, encoding, callback) {
-      let srcFileStat = null;
-      try {
-        srcFileStat = await fsPromises.stat(chunk.path);
-      } catch {}
-
-      if (srcFileStat !== null && !srcFileStat.isDirectory()) {
-        let distPath = path.join(chunk.cwd, directory);
-        let linkPath = path.join(distPath, chunk.relative);
-        let linkDirPath = path.join(linkPath, '..');
-        let linkTarget = path.relative(linkDirPath, chunk.path);
-        await _fsMkdir(linkDirPath);
-        await _fsSymlink(linkTarget, linkPath);
-      }
-      callback(null);
-    },
-    objectMode: true,
-  });
-}
-
 
 /**
  * Gulp 工具。
@@ -222,8 +119,8 @@ GulpTool.prototype.getByName = function getByName(name) {
 GulpTool.prototype.getTaskCleanDist = function getTaskCleanDist() {
   let fn = async () => {
     let distPath = path.join(this.conf.cwd, this.conf.distPathPart);
-    await _fsRm(distPath, {recursive: true});
-    await _fsMkdir(distPath);
+    await fsRm(distPath, {recursive: true});
+    await fsMkdir(distPath);
   };
   Reflect.defineProperty(fn, 'name', {value: `cleanDist`});
   return fn;
@@ -290,9 +187,5 @@ GulpTool.prototype.getSymlinkTask = function getSymlinkTask(name, distPathPart) 
 };
 
 
-module.exports = {
-  groupTransform,
-  GulpTool,
-  gulpSymlink,
-};
+export default GulpTool;
 

@@ -39,22 +39,24 @@ function groupTransform(handlePipeGroup) {
   let isNextStream = true;
 
   let readable = new Readable({
+    // TODO: 從此處著手處理串流過載問題？
     read(/* size */) {},
     objectMode: true,
   });
-  let currCallback = null;
+  let currPushCallback = null;
+  let currFlushCallback = null;
   let transform = new Transform({
     transform(chunk, encoding, callback) {
       if (!isNextStream) {
         throw Error('Streaming processing overload.');
       }
       isNextStream = false;
-      currCallback = callback;
+      currPushCallback = callback;
       readable.push(chunk, encoding);
     },
     flush(callback) {
       readable.push(null);
-      callback(null);
+      currFlushCallback = callback;
     },
     objectMode: true,
   });
@@ -63,8 +65,14 @@ function groupTransform(handlePipeGroup) {
       write(chunk, encoding, callback) {
         transform.push(chunk);
         callback(null);
-        currCallback(null);
-        isNextStream = true;
+        if (!isNextStream) {
+          isNextStream = true;
+          currPushCallback(null);
+        }
+      },
+      final(callback) {
+        callback(null);
+        currFlushCallback(null);
       },
       objectMode: true,
     }))

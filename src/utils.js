@@ -1,10 +1,8 @@
 
 import fs from 'fs';
+import fsPromises from 'fs/promises';
 import path from 'path';
 import {Readable, Writable, Transform} from 'stream';
-
-
-const fsPromises = fs.promises;
 
 
 async function fsMkdir(path) {
@@ -12,22 +10,16 @@ async function fsMkdir(path) {
 }
 
 async function fsRm(path, option) {
-  try {
-    await fsPromises.access(path, fs.constants.F_OK);
+  if (fs.existsSync(path)) {
     await fsPromises.rm(path, Object.assign({
       recursive: false,
       force: true,
     }, option));
-  } catch (err) {
-    // 目錄不存在
   }
 }
 
 async function fsSymlink(target, path, type) {
-  try {
-    await fsPromises.access(path, fs.constants.F_OK);
-    await fsRm(path);
-  } catch (err) {}
+  await fsRm(path, {recursive: true});
   await fsPromises.symlink(target, path, type);
 }
 

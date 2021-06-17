@@ -1,4 +1,5 @@
 
+export {default as gulpRun} from './run.js';
 export {default as GulpTool} from './GulpTool.js';
 export * from './utils.js';
 

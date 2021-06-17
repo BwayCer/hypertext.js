@@ -26,7 +26,7 @@ import {
  */
 function GulpTool(conf) {
   this._isInit = false;
-  this.conf = typeof conf === 'array' ? {infos: conf} : conf;
+  this.conf = conf instanceof Array ? {infos: conf} : conf;
 }
 
 /**

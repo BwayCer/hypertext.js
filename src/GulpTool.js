@@ -122,7 +122,7 @@ GulpTool.prototype.getTaskCleanDist = function getTaskCleanDist() {
     await fsRm(distPath, {recursive: true});
     await fsMkdir(distPath);
   };
-  Reflect.defineProperty(fn, 'name', {value: `cleanDist`});
+  Reflect.defineProperty(fn, 'name', {value: 'cleanDist'});
   return fn;
 };
 

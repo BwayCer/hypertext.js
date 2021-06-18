@@ -12,7 +12,6 @@ import sass from 'sass';
 /**
  * Scss 轉 css 管道。
  *
- * @memberof module:gulpTool.
  * @func gulpSass
  * @param {Object} [option]
  * @return {stream.Transform}
@@ -20,14 +19,12 @@ import sass from 'sass';
  * @example
  * gulp.src(...)
  *   .pipe(gulpSass({
- *     directory: info.distPathPart,
- *
  *     // Sass Option
  *     // file: inputFileAbsolutePath,
  *     // outputStyle: 'expanded',
- *     // outFile: outputFileAbsolutePath, // path.join(cwd, directory, filePath)
+ *     // outFile: outputCssFileAbsolutePath,
  *     // sourceMap: false,
- *     // sourceMapRoot: outputDirAbsolutePath, // path.join(cwd, directory)
+ *     // sourceMapRoot: outputDirAbsolutePath,
  *     // includePaths: [
  *     //   projectAbsolutePath,
  *     //   path.join(projectAbsolutePath, 'node_modules'),
@@ -37,20 +34,15 @@ import sass from 'sass';
  * ;
  */
 export function gulpSass(option) {
-  let {directory} = option;
-  if (typeof directory !== 'string') {
-    throw Error('Not found "directory" field of option.');
-  }
-
   return new Transform({
     transform(file, encoding, callback) {
-      let pathParse = path.parse(file.relative);
-      let relativePath = path.join(
+      let cwdPath = file.cwd;
+      let basePath = file.base;
+      let pathParse = path.parse(file.path);
+      let outFile = path.join(
         pathParse.dir,
         pathParse.name + '.css'
       );
-      let sourceMapRoot = path.join(file.cwd, directory);
-      let outFile = path.join(sourceMapRoot, relativePath);
 
       sass.render({
         outputStyle: 'expanded',
@@ -58,7 +50,7 @@ export function gulpSass(option) {
         ...option,
         file: file.path,
         outFile,
-        sourceMapRoot,
+        sourceMapRoot: basePath,
       }, (err, result) => {
         if (err) {
           throw err;
@@ -76,9 +68,9 @@ export function gulpSass(option) {
 
         if (option.sourceMap) {
           this.push(new Vinyl({
-            cwd: file.cwd,
-            base: file.base,
-            path: file.path + '.map',
+            cwd: cwdPath,
+            base: basePath,
+            path: outFile + '.map',
             contents: result.map,
           }));
         }

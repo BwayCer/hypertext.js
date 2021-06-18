@@ -43,7 +43,7 @@ GulpTool.prototype.init = function use(mode, conf = null) {
       cwd, srcPathPart, distPathPart, infos
     } = Object.assign({
       cwd: process.cwd(),
-      srcPathPart: '.',
+      srcPathPart: 'src',
       distPathPart: 'dist',
       infos: [],
     }, this.conf, conf);
@@ -165,6 +165,7 @@ GulpTool.prototype.getTask = function getTask(name, distPathPart) {
     let info = this.getByName(name);
     let newConf = this._getNewConf({info, distPathPart});
     let inputConf = {
+      cwd: this.conf.cwd,
       base: this.conf.basePath,
     };
     return gulp.src(this._getGlobs(info.src), inputConf)
@@ -190,6 +191,7 @@ GulpTool.prototype.getSymlinkTask = function getSymlinkTask(name, distPathPart) 
     let info = this.getByName(name);
     let newConf = this._getNewConf({info, distPathPart});
     let inputConf = {
+      cwd: this.conf.cwd,
       base: this.conf.basePath,
     };
     return gulp.src(this._getGlobs(info.src), inputConf)

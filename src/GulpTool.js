@@ -136,6 +136,21 @@ GulpTool.prototype._getNewConf = function getNewConf(addConf) {
   };
 };
 
+function _handleGlob(prefix, glob) {
+  return glob.startsWith('!')
+    ? '!' + path.join(prefix, glob.substring(1))
+    : path.join(prefix, glob)
+  ;
+}
+
+GulpTool.prototype._getGlobs = function getGlobs(globs) {
+  let srcPathPart = this.conf.srcPathPart;
+  return typeof globs === 'string'
+    ? _handleGlob(srcPathPart, globs)
+    : globs.map(item => _handleGlob(srcPathPart, item))
+  ;
+};
+
 /**
  * 取得任務。
  *
@@ -152,7 +167,7 @@ GulpTool.prototype.getTask = function getTask(name, distPathPart) {
     let inputConf = {
       base: this.conf.basePath,
     };
-    return gulp.src(info.src, inputConf)
+    return gulp.src(this._getGlobs(info.src), inputConf)
       .pipe(groupTransform(readable => info.handle(readable, newConf)))
       .pipe(gulp.dest(newConf.distPathPart))
     ;
@@ -177,7 +192,7 @@ GulpTool.prototype.getSymlinkTask = function getSymlinkTask(name, distPathPart) 
     let inputConf = {
       base: this.conf.basePath,
     };
-    return gulp.src(info.src, inputConf)
+    return gulp.src(this._getGlobs(info.src), inputConf)
       .pipe(groupTransform(readable => info.handle(readable, newConf)))
       .pipe(gulpSymlink(newConf.distPathPart))
     ;

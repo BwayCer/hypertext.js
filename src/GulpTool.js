@@ -1,13 +1,27 @@
 
 import path from 'path';
+import {Transform} from 'stream';
 
 import gulp from 'gulp';
 // const multimatch = require('multimatch');
 
-import {
-  fsMkdir, fsRm,
-  groupTransform, gulpSymlink,
-} from './utils.js';
+import {fsMkdir, fsRm, gulpSymlink} from './utils.js';
+
+
+function _mediumTransform(handlePipeGroup) {
+  return handlePipeGroup(
+    new Transform({
+      transform(chunk, encoding, callback) {
+        this.push(chunk);
+        callback(null);
+      },
+      flush(callback) {
+        callback(null);
+      },
+      objectMode: true,
+    })
+  );
+}
 
 
 /**
@@ -169,7 +183,7 @@ GulpTool.prototype.getTask = function getTask(name, distPathPart) {
       base: this.conf.basePath,
     };
     return gulp.src(this._getGlobs(info.src), inputConf)
-      .pipe(groupTransform(readable => info.handle(readable, newConf)))
+      .pipe(_mediumTransform(readable => info.handle(readable, newConf)))
       .pipe(gulp.dest(newConf.distPathPart))
     ;
   };
@@ -195,7 +209,7 @@ GulpTool.prototype.getSymlinkTask = function getSymlinkTask(name, distPathPart) 
       base: this.conf.basePath,
     };
     return gulp.src(this._getGlobs(info.src), inputConf)
-      .pipe(groupTransform(readable => info.handle(readable, newConf)))
+      .pipe(_mediumTransform(readable => info.handle(readable, newConf)))
       .pipe(gulpSymlink(newConf.distPathPart))
     ;
   };

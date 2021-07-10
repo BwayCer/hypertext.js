@@ -2,7 +2,7 @@
 import fs from 'fs';
 import fsPromises from 'fs/promises';
 import path from 'path';
-import {Readable, Writable, Transform} from 'stream';
+import {Writable} from 'stream';
 
 
 async function fsMkdir(path) {
@@ -23,63 +23,6 @@ async function fsSymlink(target, path, type) {
   await fsPromises.symlink(target, path, type);
 }
 
-
-/**
- * 處裡群組包轉換器：
- * 可以在 `gulp.pipe()` 中丟入一組處裡包，因此提高模組化的便利性。
- *
- * @func groupTransform
- * @param {Function} handlePipeGroup
- * @return {stream.Transform}
- */
-function groupTransform(handlePipeGroup) {
-  // NOTE:
-  // 當 Writable 完成時通知 Transform 可以維持有序的一個接一個的處理流程。
-  // 為確保上述邏輯，所以檢查 currCallback 是否有非預期外的調用。
-  let isNextStream = true;
-
-  let readable = new Readable({
-    // TODO: 從此處著手處理串流過載問題？
-    read(/* size */) {},
-    objectMode: true,
-  });
-  let currPushCallback = null;
-  let currFlushCallback = null;
-  let transform = new Transform({
-    transform(chunk, encoding, callback) {
-      if (!isNextStream) {
-        throw Error('Streaming processing overload.');
-      }
-      isNextStream = false;
-      currPushCallback = callback;
-      readable.push(chunk, encoding);
-    },
-    flush(callback) {
-      readable.push(null);
-      currFlushCallback = callback;
-    },
-    objectMode: true,
-  });
-  handlePipeGroup(readable)
-    .pipe(new Writable({
-      write(chunk, encoding, callback) {
-        transform.push(chunk);
-        callback(null);
-        if (!isNextStream) {
-          isNextStream = true;
-          currPushCallback(null);
-        }
-      },
-      final(callback) {
-        callback(null);
-        currFlushCallback(null);
-      },
-      objectMode: true,
-    }))
-  ;
-
-  return transform;
-}
 
 
 /**
@@ -148,6 +91,6 @@ function gulpSymlink(directory) {
 
 export {
   fsMkdir, fsRm, fsSymlink,
-  groupTransform, gulpSymlink,
+  gulpSymlink,
 };
 

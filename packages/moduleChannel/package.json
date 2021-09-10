@@ -1,0 +1,16 @@
+{
+  "name": "@bwaycer/module-channel",
+  "version": "1.0.0",
+  "description": "Javascript module channel.",
+  "type": "module",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BwayCer/hypertext.js.git"
+  },
+  "license": "Unlicense",
+  "files": [
+    "index.js",
+    "refPoint.js"
+  ]
+}

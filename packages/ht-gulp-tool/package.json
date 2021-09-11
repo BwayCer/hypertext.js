@@ -1,0 +1,35 @@
+{
+  "name": "@bwaycer/gulp-tool",
+  "version": "0.0.0",
+  "description": "About Gulp utilities.",
+  "type": "module",
+  "main": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BwayCer/gulp-tool.node.git"
+  },
+  "author": "BwayCer <bwaycer@gmail.com> (https://bwaycer.github.io/about)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BwayCer/gulp-tool.node/issues"
+  },
+  "homepage": "https://github.com/BwayCer/gulp-tool.node#readme",
+  "keywords": [
+    "gulp"
+  ],
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "gulp": ">=4.0.2"
+  },
+  "devDependencies": {
+    "ansi-colors": "^4.1.1",
+    "gulp": "^4.0.2",
+    "pretty-hrtime": "^1.0.3",
+    "pug": "^3.0.2",
+    "sass": "^1.34.1"
+  }
+}

@@ -1,6 +1,6 @@
 
 import path from 'path';
-import {Transform} from 'stream';
+import {Readable, Writable, Transform} from 'stream';
 
 import gulp from 'gulp';
 // const multimatch = require('multimatch');
@@ -8,19 +8,47 @@ import gulp from 'gulp';
 import {fsMkdir, fsRm, gulpSymlink} from './utils.js';
 
 
+/**
+ * 處裡群組包轉換器：
+ * 可以在 `gulp.pipe()` 中丟入一組處裡包，因此提高模組化的便利性。
+ *
+ * @func _mediumTransform
+ * @param {Function} handlePipeGroup
+ * @return {stream.Transform}
+ */
+// NOTE: 如果只用 `Transform` 則只會觸發最後一個 `pipe()`。
 function _mediumTransform(handlePipeGroup) {
-  return handlePipeGroup(
-    new Transform({
-      transform(chunk, encoding, callback) {
-        this.push(chunk);
+  let readable = new Readable({
+    // TODO: 從此處著手處理串流過載問題？
+    read(/* size */) {},
+    objectMode: true,
+  });
+  let currFlushCallback = null;
+  let transform = new Transform({
+    transform(chunk, encoding, callback) {
+      readable.push(chunk, encoding);
+      callback(null);
+    },
+    flush(callback) {
+      readable.push(null);
+      currFlushCallback = callback;
+    },
+    objectMode: true,
+  });
+  handlePipeGroup(readable)
+    .pipe(new Writable({
+      write(chunk, encoding, callback) {
+        transform.push(chunk);
         callback(null);
       },
-      flush(callback) {
+      final(callback) {
         callback(null);
+        currFlushCallback(null);
       },
       objectMode: true,
-    })
-  );
+    }))
+  ;
+  return transform;
 }
 
 

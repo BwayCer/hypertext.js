@@ -10,7 +10,7 @@ Gulp 小工具
 
 ```
 import gulp from 'gulp';
-import {GulpTool} from '@bwaycer/gulp-tool';
+import {GulpTool} from '@bwaycer/ht-gulp-tool';
 
 let gulpTool = new GulpTool({
   srcPathPart: 'path/to/src',

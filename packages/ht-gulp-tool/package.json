@@ -1,12 +1,12 @@
 {
-  "name": "@bwaycer/gulp-tool",
+  "name": "@bwaycer/ht-gulp-tool",
   "version": "0.0.0",
   "description": "About Gulp utilities.",
   "type": "module",
   "main": "src/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BwayCer/gulp-tool.node.git"
+    "url": "git+https://github.com/BwayCer/hypertext.js.git"
   },
   "author": "BwayCer <bwaycer@gmail.com> (https://bwaycer.github.io/about)",
   "license": "ISC",

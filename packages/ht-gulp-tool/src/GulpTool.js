@@ -209,6 +209,7 @@ GulpTool.prototype.getTask = function getTask(name, distPathPart) {
     let inputConf = {
       cwd: this.conf.cwd,
       base: this.conf.basePath,
+      allowEmpty: true,
     };
     return gulp.src(this._getGlobs(info.src), inputConf)
       .pipe(_mediumTransform(readable => info.handle(readable, newConf)))
@@ -235,6 +236,7 @@ GulpTool.prototype.getSymlinkTask = function getSymlinkTask(name, distPathPart) 
     let inputConf = {
       cwd: this.conf.cwd,
       base: this.conf.basePath,
+      allowEmpty: true,
     };
     return gulp.src(this._getGlobs(info.src), inputConf)
       .pipe(_mediumTransform(readable => info.handle(readable, newConf)))
